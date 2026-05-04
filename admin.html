@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Admin</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/data.js"></script>
+</head>
+
+<body>
+
+  <h2>Dashboard Admin</h2>
+
+  <!-- FORM TAMBAH PRODUK -->
+  <input id="name" placeholder="Nama Produk">
+  <input id="price" placeholder="Harga">
+  <input id="category" placeholder="Kategori">
+  <button onclick="addProduct()">Tambah</button>
+
+  <hr>
+
+  <!-- LIST PRODUK -->
+  <div id="admin-list"></div>
+
+  <script>
+    let products = JSON.parse(localStorage.getItem("products")) || [];
+    const list = document.getElementById("admin-list");
+
+    function render() {
+      list.innerHTML = "";
+      products.forEach((p, i) => {
+        list.innerHTML += `
+      <div>
+        ${p.name} - Rp ${p.price} (${p.category})
+        <button onclick="deleteProduct(${i})">Hapus</button>
+      </div>
+    `;
+      });
+    }
+
+    function addProduct() {
+      const name = document.getElementById("name").value;
+      const price = document.getElementById("price").value;
+      const category = document.getElementById("category").value;
+
+      if (!name || !price || !category) {
+        alert("Isi semua field!");
+        return;
+      }
+
+      products.push({
+        id: Date.now(),
+        name,
+        price: Number(price),
+        category
+      });
+
+      localStorage.setItem("products", JSON.stringify(products));
+      render();
+    }
+
+    function deleteProduct(index) {
+      products.splice(index, 1);
+      localStorage.setItem("products", JSON.stringify(products));
+      render();
+    }
+
+    render();
+  </script>
+
+</body>
+
+</html>

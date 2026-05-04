@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Checkout</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+  <h2>Checkout</h2>
+
+  <div id="checkout-list"></div>
+  <h3 id="total"></h3>
+
+  <button onclick="bayar()">Bayar Sekarang</button>
+
+  <script>
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    const list = document.getElementById("checkout-list");
+    let total = 0;
+
+    cart.forEach(item => {
+      total += item.price * item.qty;
+      list.innerHTML += `<p>${item.name} x${item.qty}</p>`;
+    });
+
+    document.getElementById("total").innerText = "Total: Rp " + total;
+
+    function bayar() {
+      alert("Pembayaran berhasil!");
+      localStorage.removeItem("cart");
+      window.location.href = "index.html";
+    }
+
+    function goCheckout(){
+  window.location.href = "checkout.html";
+}
+
+  </script>
+<script src="js/checkout.js"></script>
+</body>
+
+</html>

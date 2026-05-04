@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+<meta charset="UTF-8">
+<title>Detail Produk</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="js/data.js"></script>
+</head>
+
+<body>
+
+<nav>
+  <div class="logo">
+    <img src="images/logo.png">
+    <h2>CYBER CREATE</h2>
+  </div>
+
+  <div class="menu">
+    <a href="index.html">Home</a>
+    <a href="index.html#produk">Produk</a>
+  </div>
+
+  <div class="nav-right">
+    <div class="cart-icon" onclick="toggleCart()">
+      <img src="images/cart.png">
+      <span id="cart-count">0</span>
+    </div>
+  </div>
+</nav>
+
+<!-- DETAIL -->
+<div id="detail" class="box" style="text-align:center;"></div>
+
+<div class="detail-btn">
+  <button onclick="addToCart()">Tambah ke Keranjang</button>
+</div>
+
+<!-- CART -->
+<div class="cart-sidebar" id="cartSidebar">
+  <span class="cart-close" onclick="toggleCart()">✕</span>
+  <h2>Keranjang</h2>
+  <div id="cartList"></div>
+  <h3 id="cartTotal"></h3>
+  <button onclick="goCheckout()">Checkout</button>
+</div>
+
+<!-- MODAL -->
+<div id="checkoutModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeCheckout()">&times;</span>
+    <h2>Checkout</h2>
+    <div id="checkout-items"></div>
+    <h3>Total: Rp <span id="checkout-total"></span></h3>
+    <button onclick="bayarSekarang()">Bayar</button>
+  </div>
+</div>
+
+<script>
+const id = parseInt(new URLSearchParams(location.search).get("id"));
+const products = JSON.parse(localStorage.getItem("products")) || [];
+const product = products.find(p => p.id === id);
+
+if (product) {
+
+  let specHTML = "";
+
+  // PC
+  if (product.category === "pc") {
+    specHTML = `
+      <p style="margin-top:10px; line-height:1.6;">
+        <b>Spesifikasi PC:</b><br>
+        Processor: ${product.cpu || "Intel / Ryzen"}<br>
+        RAM: ${product.ram || "16GB"}<br>
+        VGA: ${product.gpu || "RTX Series"}<br>
+        Storage: ${product.storage || "SSD 512GB"}<br>
+        PSU: ${product.psu || "500W"}
+      </p>
+    `;
+  }
+
+  // Motherboard
+  else if (product.category === "motherboard") {
+    specHTML = `
+      <p style="margin-top:10px; line-height:1.6;">
+        <b>Spesifikasi Motherboard:</b><br>
+        Socket: ${product.socket || "AM4 / LGA"}<br>
+        Chipset: ${product.chipset || "B550 / Z690"}<br>
+        RAM Support: ${product.ram_support || "DDR4"}<br>
+        Form Factor: ${product.form || "ATX / mATX"}
+      </p>
+    `;
+  }
+
+  document.getElementById("detail").innerHTML = `
+    <img src="images/${product.img}" 
+         style="width:220px; margin-bottom:15px;"
+         onerror="this.src='images/default.png'">
+
+    <h2>${product.name}</h2>
+    <p>Rp ${product.price}</p>
+
+    ${specHTML}
+  `;
+}
+
+// ✅ FIX CART MASUK
+function addToCart(){
+
+  if(!product){
+    alert("Produk tidak ditemukan!");
+    return;
+  }
+
+  let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+  let exist = cart.find(i => i.id === product.id);
+
+  if(exist){
+    exist.qty++;
+  } else {
+    cart.push({
+      id: product.id,
+      qty: 1
+    });
+  }
+
+  localStorage.setItem("cart", JSON.stringify(cart));
+
+  updateCartCount();
+  renderCart();
+
+  alert("Berhasil masuk keranjang!");
+}
+</script>
+
+<!-- CART SYSTEM -->
+<script>
+function toggleCart(){
+  document.getElementById("cartSidebar").classList.toggle("active");
+  renderCart();
+}
+
+function renderCart(){
+  let cart = JSON.parse(localStorage.getItem("cart")) || [];
+  let products = JSON.parse(localStorage.getItem("products")) || [];
+
+  let list = document.getElementById("cartList");
+  let totalEl = document.getElementById("cartTotal");
+
+  list.innerHTML = "";
+  let total = 0;
+
+  cart.forEach(item => {
+    let p = products.find(x => x.id == item.id);
+    if(!p) return;
+
+    total += p.price * item.qty;
+
+    list.innerHTML += `
+      <div class="cart-item">
+        <p>${p.name}</p>
+        <p>Rp ${p.price}</p>
+        <button onclick="min(${item.id})">-</button>
+        ${item.qty}
+        <button onclick="plus(${item.id})">+</button>
+        <button onclick="hapus(${item.id})">🗑</button>
+      </div>`;
+  });
+
+  totalEl.innerText = "Total: Rp " + total;
+}
+
+function plus(id){ let c=JSON.parse(localStorage.getItem("cart")); c.find(i=>i.id==id).qty++; localStorage.setItem("cart",JSON.stringify(c)); renderCart(); updateCartCount();}
+function min(id){ let c=JSON.parse(localStorage.getItem("cart")); let i=c.find(x=>x.id==id); if(i.qty>1){i.qty--} else {c=c.filter(x=>x.id!=id)} localStorage.setItem("cart",JSON.stringify(c)); renderCart(); updateCartCount();}
+function hapus(id){ let c=JSON.parse(localStorage.getItem("cart")); c=c.filter(x=>x.id!=id); localStorage.setItem("cart",JSON.stringify(c)); renderCart(); updateCartCount();}
+
+function goCheckout(){
+  document.getElementById("checkoutModal").style.display="flex";
+  renderCheckout();
+}
+
+function closeCheckout(){
+  document.getElementById("checkoutModal").style.display="none";
+}
+
+function renderCheckout(){
+  let cart = JSON.parse(localStorage.getItem("cart")) || [];
+  let products = JSON.parse(localStorage.getItem("products")) || [];
+
+  let list = document.getElementById("checkout-items");
+  let totalEl = document.getElementById("checkout-total");
+
+  list.innerHTML="";
+  let total=0;
+
+  cart.forEach(i=>{
+    let p=products.find(x=>x.id==i.id);
+    total += p.price * i.qty;
+    list.innerHTML += `<p>${p.name} x ${i.qty} - Rp ${p.price*i.qty}</p>`;
+  });
+
+  totalEl.innerText = total;
+}
+
+function bayarSekarang(){
+  alert("Pembayaran berhasil");
+  localStorage.removeItem("cart");
+  closeCheckout();
+  renderCart();
+  updateCartCount();
+}
+
+function updateCartCount(){
+  let cart = JSON.parse(localStorage.getItem("cart")) || [];
+  let total = cart.reduce((a,b)=>a+b.qty,0);
+  document.getElementById("cart-count").innerText = total;
+}
+
+// ✅ INIT BIAR LANGSUNG SYNC
+document.addEventListener("DOMContentLoaded", ()=>{
+  updateCartCount();
+  renderCart();
+});
+</script>
+
+</body>
+</html>

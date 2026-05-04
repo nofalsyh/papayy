@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Produk</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="js/data.js"></script>
+</head>
+
+<body>
+
+<nav>
+  <div class="logo">
+    <img src="images/logo.png">
+    <h2>CYBER CREATE</h2>
+  </div>
+
+  <div class="menu">
+    <a href="index.html">Home</a>
+    <a href="index.html#produk">Produk</a>
+  </div>
+
+  <div class="nav-right">
+    <div class="cart-icon" onclick="toggleCart()">
+      <img src="images/cart.png">
+      <span id="cart-count">0</span>
+    </div>
+  </div>
+</nav>
+
+<h2 id="judul"></h2>
+<div class="grid" id="list"></div>
+
+<!-- CART -->
+<div class="cart-sidebar" id="cartSidebar">
+
+    <!-- tombol close -->
+    <span class="cart-close" onclick="toggleCart()">✕</span>  
+  <h2>Keranjang</h2>
+  <div id="cartList"></div>
+  <h3 id="cartTotal"></h3>
+  <button onclick="openCheckout()">Checkout</button>
+</div>
+
+<!-- MODAL -->
+<div id="checkoutModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeCheckout()">&times;</span>
+    <h2>Checkout</h2>
+    <div id="checkout-items"></div>
+    <h3>Total: Rp <span id="checkout-total"></span></h3>
+    <button onclick="bayarSekarang()">Bayar</button>
+  </div>
+</div>
+
+<script>
+    const products = JSON.parse(localStorage.getItem("products")) || [];
+    const category = localStorage.getItem("category");
+    const list = document.getElementById("list");
+    
+    document.getElementById("judul").innerText = category.toUpperCase();
+    
+    const filtered = products.filter(p => 
+      p.category && category && p.category === category
+    );
+    
+    const show = filtered.slice(0, 3);
+    
+    list.innerHTML = "";
+    
+    show.forEach(p => {
+    
+      let detailBtn = "";
+    
+      if (p.category === "pc" || p.category === "motherboard") {
+        detailBtn = `<button onclick="detail(${p.id})">DETAIL</button>`;
+      }
+    
+      list.innerHTML += `
+        <div class="box">
+          <img src="images/${p.img}" onerror="this.src='images/default.png'">
+          <p>${p.name}</p>
+          <small>Rp ${p.price}</small>
+    
+          ${detailBtn}
+    
+          <button onclick="beli(${p.id})">TAMABAH KE KERANJANG</button>
+        </div>
+      `;
+    });
+    
+    function detail(id){
+      location.href = "product-detail.html?id=" + id;
+    }
+    
+    function beli(id){
+  let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+  let exist = cart.find(i => i.id == id);
+
+  if(exist){
+    exist.qty++;
+  } else {
+    cart.push({
+      id: id,
+      qty: 1
+    });
+  }
+
+  localStorage.setItem("cart", JSON.stringify(cart));
+
+  updateCartCount();
+  renderCart();
+}
+    
+    if(!category){
+      list.innerHTML = "<p>Category tidak ditemukan</p>";
+    }
+    </script>
+    
+<script src="js/cart-system.js"></script>
+
+</body>
+</html>
